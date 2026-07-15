@@ -1,21 +1,20 @@
 name: Daily Brief (generate and publish)
 
 on:
-  push:
-    branches: [ main ]
   schedule:
-    - cron: '40 0 * * *'   # 08:40 Beijing = 00:40 UTC
+    - cron: '40 0 * * *'   # 每日 00:40 UTC = 北京时间 08:40
   workflow_dispatch:
 
 permissions:
-  contents: write    # 需要写入权限以便把 index.html 推回 main
+  # 仅需要默认权限来运行脚本并访问 secrets
+  contents: read
 
 jobs:
-  build-and-publish:
+  generate-and-publish:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
@@ -25,33 +24,11 @@ jobs:
           python-version: '3.11'
 
       - name: Install dependencies
-        run: pip install -r requirements.txt
+        run: pip install --no-cache-dir -r requirements.txt
 
       - name: Generate brief and insert to Supabase
         env:
           SUPS_URL: ${{ secrets.SUPS_URL02 }}
-          SUPS_KEY: ${{ secrets.SUPS_API02 }}
+          SUPS_KEY: ${{ secrets.SUPS_API02 }}   # 应为 service_role key 用于写入
         run: |
           python scripts/generate_brief.py
-
-      - name: Render index.html from Supabase (latest 7 days)
-        env:
-          SUPS_URL: ${{ secrets.SUPS_URL02 }}
-          SUPS_KEY: ${{ secrets.SUPS_API02 }}
-        run: |
-          python scripts/render_index.py
-
-      - name: Commit index.html back to main
-        env:
-          GIT_COMMITTER_NAME: github-actions[bot]
-          GIT_COMMITTER_EMAIL: 41898282+github-actions[bot]@users.noreply.github.com
-        run: |
-          git config user.name "$GIT_COMMITTER_NAME"
-          git config user.email "$GIT_COMMITTER_EMAIL"
-          if [ -n "$(git status --porcelain)" ]; then
-            git add index.html
-            git commit -m "ci: update index.html with latest briefs [skip ci]" || echo "commit failed or no changes"
-            git push origin HEAD:main
-          else
-            echo "No changes to commit"
-          fi
