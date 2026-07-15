@@ -3,35 +3,27 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>每日要闻简报</title>
+  <title>每日要闻简报（最近一周）</title>
   <link rel="icon" href="jinpng.png" />
   <style>
-    :root{--bg:#f7f8fa;--card:#ffffff;--accent:#0366d6}
-    body{font-family:system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial; background:var(--bg); margin:0; padding:24px; color:#111}
+    :root{--bg:#f7f8fa;--card:#fff;--accent:#0366d6}
+    body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;background:var(--bg);margin:0;padding:20px;color:#111}
     header{display:flex;align-items:center;gap:12px}
     header img{width:56px;height:56px;object-fit:contain}
     header h1{margin:0;font-size:1.4rem}
     .meta{color:#666;font-size:0.9rem}
     .controls{margin-top:12px}
-    .cards{position:relative; margin-top:18px; display:flex; gap:12px; flex-wrap:wrap}
-    .card{background:var(--card); border-radius:10px; box-shadow:0 6px 18px rgba(18,24,31,0.08); padding:14px; width:280px; transform-origin:center; transition:transform .25s ease, box-shadow .25s ease; cursor:grab}
-    .card:hover{transform:translateY(-6px) rotate(-1deg); box-shadow:0 18px 36px rgba(18,24,31,0.12)}
+    .cards{display:flex;flex-wrap:wrap;gap:12px;margin-top:18px}
+    .card{background:var(--card);border-radius:10px;padding:14px;width:300px;box-shadow:0 8px 20px rgba(0,0,0,0.06);transition:transform .18s;cursor:default}
+    .card:hover{transform:translateY(-6px)}
     .card h2{margin:0 0 6px 0;font-size:1rem}
-    .card .meta{font-size:0.8rem}
-    .card .content{margin-top:8px;font-size:0.9rem;color:#222; max-height:160px; overflow:auto}
-    .card .links{margin-top:8px}
+    .card .meta{font-size:0.8rem;color:#666}
+    .card .content{margin-top:8px;font-size:0.95rem;color:#222;max-height:180px;overflow:auto}
     .badge{display:inline-block;background:var(--accent);color:#fff;padding:4px 8px;border-radius:8px;font-size:0.8rem}
-    .card{opacity:0; transform:translateY(18px); animation:pop .45s ease forwards}
-    .card:nth-child(1){animation-delay:.05s}
-    .card:nth-child(2){animation-delay:.10s}
-    .card:nth-child(3){animation-delay:.15s}
-    .card:nth-child(4){animation-delay:.20s}
-    .card:nth-child(5){animation-delay:.25s}
-    .card:nth-child(6){animation-delay:.30s}
-    .card:nth-child(7){animation-delay:.35s}
-    @keyframes pop{to{opacity:1; transform:translateY(0)}}
-    @media (max-width:720px){ .cards{justify-content:center} .card{width:92%} }
     .notice{background:#fff3cd;border:1px solid #ffeeba;color:#856404;padding:12px;border-radius:8px}
+    #debugPre{white-space:pre-wrap;max-height:240px;overflow:auto;background:#fff;padding:12px;border:1px solid #ddd;margin-top:12px}
+    @media (max-width:720px){ .card{width:92%} .cards{justify-content:center} }
+    button{padding:6px 10px;border-radius:6px;border:1px solid #ddd;background:#fff;cursor:pointer}
   </style>
 </head>
 <body>
@@ -39,111 +31,149 @@
     <img src="jinpng.png" alt="logo" />
     <div>
       <h1>每日要闻简报（最近一周）</h1>
-      <div class="meta">自动从 Supabase 拉取并展示，最多 7 条（如果未配置，请参照提示）</div>
+      <div class="meta">直接从 Supabase 拉取并展示（最多 7 条）。</div>
     </div>
   </header>
 
   <div class="controls">
     <button id="refreshBtn">刷新</button>
+    <button id="toggleDebug" style="margin-left:8px">显示原始响应</button>
     <span id="status" style="margin-left:12px;color:#666"></span>
   </div>
 
   <main>
     <div id="error" style="margin-top:16px"></div>
-    <div class="cards" id="cards" aria-live="polite" style="margin-top:18px"></div>
+    <div class="cards" id="cards" aria-live="polite"></div>
+    <div id="debugWrap" style="display:none">
+      <div id="debugPre"></div>
+    </div>
   </main>
 
-  <script type="module">
+  <script>
+    // CONFIG: if you prefer embedding the anon key here (not recommended), set FALLBACK_* below.
+    const FALLBACK_SUPS_URL = ''; // e.g. 'https://your.supabase.co'  OR leave empty to require supabase_config.js
+    const FALLBACK_ANON_KEY = ''; // e.g. 'sb_publishable_...' OR leave empty
+
     const statusEl = document.getElementById('status');
     const cardsEl = document.getElementById('cards');
     const errorEl = document.getElementById('error');
+    const debugPre = document.getElementById('debugPre');
+    const debugWrap = document.getElementById('debugWrap');
     const refreshBtn = document.getElementById('refreshBtn');
+    const toggleDebugBtn = document.getElementById('toggleDebug');
 
     let SUPS_URL = null;
     let SUPS_ANON_KEY = null;
+    let lastRaw = null;
 
-    async function loadConfig(){
-      try{
-        const m = await import('./supabase_config.js');
-        SUPS_URL = m.SUPS_URL;
-        SUPS_ANON_KEY = m.SUPS_ANON_KEY;
+    // Try to load config by fetching supabase_config.js as text and extracting values (avoids dynamic import issues)
+    async function loadConfig() {
+      if (FALLBACK_SUPS_URL && FALLBACK_ANON_KEY) {
+        SUPS_URL = FALLBACK_SUPS_URL;
+        SUPS_ANON_KEY = FALLBACK_ANON_KEY;
         return true;
-      }catch(e){
+      }
+      try {
+        const resp = await fetch('./supabase_config.js', {cache: 'no-store'});
+        if (!resp.ok) return false;
+        const txt = await resp.text();
+        // naive parse for export const SUPS_URL = "..."
+        const urlMatch = txt.match(/SUPS_URL\s*=\s*['"]([^'"]+)['"]/);
+        const keyMatch = txt.match(/SUPS_ANON_KEY\s*=\s*['"]([^'"]+)['"]/);
+        if (urlMatch) SUPS_URL = urlMatch[1].trim();
+        if (keyMatch) SUPS_ANON_KEY = keyMatch[1].trim();
+        return !!(SUPS_URL && SUPS_ANON_KEY);
+      } catch (e) {
         return false;
       }
     }
 
-    function showConfigInstructions(){
+    function showConfigInstructions() {
       errorEl.innerHTML = `
         <div class="notice">
-          未检测到配置文件 <code>supabase_config.js</code>。
-          请在仓库根目录创建 <code>supabase_config.js</code>，内容示例：
+          未检测到有效的 <code>supabase_config.js</code> 或未配置 anon key。请在仓库根创建 <code>supabase_config.js</code>，示例：<br/>
           <pre style="white-space:pre-wrap">export const SUPS_URL = "https://your-project.supabase.co";
 export const SUPS_ANON_KEY = "&lt;YOUR_ANON_KEY&gt;";</pre>
-          仅放入 Supabase 的 anon 公钥（用于只读），不要放 service_role key。保存后刷新此页面。
+          保存后刷新页面。或把 anon key 填入顶部 FALLBACK_*（仅用于测试）。
         </div>`;
+      statusEl.textContent = '';
     }
 
-    function cleanCards(){ cardsEl.innerHTML = ''; }
+    function escapeHtml(s){ if(s===null || s===undefined) return ''; return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c]); }
 
-    function renderCard(rec, idx){
+    function renderCard(rec, idx) {
       const div = document.createElement('article');
       div.className = 'card';
-      const title = rec.title || `每日要闻 ${rec.date || ''}`;
-      const date = rec.date || '';
+      const title = rec.title || (`每日要闻 ${rec.date||''}`);
+      const date = rec.date || rec.inserted_at || '';
       const uid = rec.uid || '';
-      const html = rec.html || (rec.content||'').replace(/\n/g,'<br/>');
-      const sources = rec.source_urls || [];
-
+      // prefer html field if present (server-provided), else content
+      const html = rec.html ? rec.html : (rec.content ? escapeHtml(rec.content).replace(/\n/g,'<br/>') : '');
+      const sources = Array.isArray(rec.source_urls) ? rec.source_urls : (rec.source_urls ? JSON.parse(rec.source_urls) : []);
       div.innerHTML = `
         <h2>${escapeHtml(title)}</h2>
         <div class="meta">${escapeHtml(date)} — ID: ${escapeHtml(uid)} <span class="badge">${idx+1}</span></div>
         <div class="content">${html}</div>
-        <div class="links">${sources.slice(0,3).map(s=>`<div><a href="${escapeAttr(s)}" target="_blank" rel="noopener">来源</a></div>`).join('')}</div>
+        <div class="links">${(sources.slice?sources.slice(0,3):[]).map(s=>`<div><a href="${escapeHtml(s)}" target="_blank" rel="noopener">来源</a></div>`).join('')}</div>
       `;
       cardsEl.appendChild(div);
     }
 
-    function escapeHtml(s){ if(!s) return ''; return String(s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c]); }
-    function escapeAttr(s){ return escapeHtml(s).replace(/"/g,'%22'); }
+    function showEmptyNotice() {
+      cardsEl.innerHTML = '';
+      errorEl.innerHTML = '<div class="notice">最近一周没有可显示的简报。</div>';
+      statusEl.textContent = '';
+    }
 
-    async function fetchBriefs(){
-      if(!SUPS_URL || !SUPS_ANON_KEY) {
-        showConfigInstructions();
-        statusEl.textContent = '';
-        return;
-      }
-      statusEl.textContent = '拉取中...';
+    async function fetchBriefs() {
       errorEl.innerHTML = '';
-      try{
-        const today = new Date();
-        const since = new Date(today.getFullYear(), today.getMonth(), today.getDate() - 6).toISOString().slice(0,10);
-        const url = `${SUPS_URL.replace(/\/+$/,'')}/rest/v1/briefs?date=gte.${since}&order=date.desc&limit=7&select=*`;
-        const r = await fetch(url, { method:'GET', headers: { 'apikey': SUPS_ANON_KEY, 'Authorization': `Bearer ${SUPS_ANON_KEY}` } });
-        if(!r.ok){
-          const txt = await r.text();
-          throw new Error(`请求返回 ${r.status}: ${txt}`);
-        }
-        const data = await r.json();
-        cleanCards();
-        if(!Array.isArray(data) || data.length===0){
-          errorEl.innerHTML = '<div class="notice">最近一周没有可显示的简报。</div>';
-          statusEl.textContent = '';
+      cardsEl.innerHTML = '';
+      statusEl.textContent = '拉取中...';
+      try {
+        if (!SUPS_URL || !SUPS_ANON_KEY) {
+          showConfigInstructions();
           return;
         }
-        data.slice(0,7).forEach((rec, idx)=> renderCard(rec, idx));
+        const sinceISO = new Date(Date.now() - 6*24*60*60*1000).toISOString();
+        // Use inserted_at for reliability
+        const url = SUPS_URL.replace(/\/+$/,'') + '/rest/v1/briefs?inserted_at=gte.' + encodeURIComponent(sinceISO) + '&order=inserted_at.desc&limit=7&select=*';
+        const r = await fetch(url, { method: 'GET', headers: { 'apikey': SUPS_ANON_KEY, 'Authorization': 'Bearer ' + SUPS_ANON_KEY } });
+        const text = await r.text();
+        let data;
+        try { data = JSON.parse(text); } catch(e) { throw new Error('非 JSON 响应: ' + text); }
+        lastRaw = { status: r.status, body: data };
+        debugPre.textContent = JSON.stringify(lastRaw, null, 2);
+
+        if (!Array.isArray(data) || data.length === 0) {
+          showEmptyNotice();
+          return;
+        }
+        // render up to 7
+        cardsEl.innerHTML = '';
+        data.slice(0,7).forEach((rec, idx) => renderCard(rec, idx));
         statusEl.textContent = `显示 ${Math.min(data.length,7)} 条`;
-      }catch(err){
-        errorEl.innerHTML = `<div class="notice">拉取失败：${escapeHtml(err.message)}</div>`;
+        errorEl.innerHTML = '';
+      } catch (err) {
+        errorEl.innerHTML = `<div class="notice">拉取失败：${escapeHtml(err.message || String(err))}</div>`;
         statusEl.textContent = '';
       }
     }
 
-    refreshBtn.addEventListener('click', ()=>{ fetchBriefs(); });
+    refreshBtn.addEventListener('click', () => fetchBriefs());
+    toggleDebugBtn.addEventListener('click', () => { debugWrap.style.display = debugWrap.style.display === 'none' ? 'block' : 'none'; });
 
-    (async ()=>{
+    // bootstrap
+    (async function init(){
       const ok = await loadConfig();
-      if(!ok){ showConfigInstructions(); return; }
+      if (!ok) {
+        // still try with fallback constants (if provided)
+        if (FALLBACK_SUPS_URL && FALLBACK_ANON_KEY) {
+          SUPS_URL = FALLBACK_SUPS_URL; SUPS_ANON_KEY = FALLBACK_ANON_KEY;
+        } else {
+          showConfigInstructions();
+          return;
+        }
+      }
       await fetchBriefs();
     })();
   </script>
