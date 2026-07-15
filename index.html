@@ -1,31 +1,151 @@
 <!doctype html>
 <html lang="zh-CN">
 <head>
-  <meta charset="utf-8"/>
-  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>每日要闻简报</title>
+  <link rel="icon" href="jinpng.png" />
   <style>
-    body { font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial; max-width:900px; margin: 20px auto; padding: 0 16px; line-height:1.6; }
-    header { text-align:center; }
-    img.logo { max-width:200px; }
-    section.brief { border-bottom:1px solid #ddd; padding: 12px 0; }
-    .meta { color: #666; font-size: 0.9em; }
-    a { color: #0366d6; text-decoration: none; }
+    :root{--bg:#f7f8fa;--card:#ffffff;--accent:#0366d6}
+    body{font-family:system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial; background:var(--bg); margin:0; padding:24px; color:#111}
+    header{display:flex;align-items:center;gap:12px}
+    header img{width:56px;height:56px;object-fit:contain}
+    header h1{margin:0;font-size:1.4rem}
+    .meta{color:#666;font-size:0.9rem}
+    .controls{margin-top:12px}
+    .cards{position:relative; margin-top:18px; display:flex; gap:12px; flex-wrap:wrap}
+    .card{background:var(--card); border-radius:10px; box-shadow:0 6px 18px rgba(18,24,31,0.08); padding:14px; width:280px; transform-origin:center; transition:transform .25s ease, box-shadow .25s ease; cursor:grab}
+    .card:hover{transform:translateY(-6px) rotate(-1deg); box-shadow:0 18px 36px rgba(18,24,31,0.12)}
+    .card h2{margin:0 0 6px 0;font-size:1rem}
+    .card .meta{font-size:0.8rem}
+    .card .content{margin-top:8px;font-size:0.9rem;color:#222; max-height:160px; overflow:auto}
+    .card .links{margin-top:8px}
+    .badge{display:inline-block;background:var(--accent);color:#fff;padding:4px 8px;border-radius:8px;font-size:0.8rem}
+    .card{opacity:0; transform:translateY(18px); animation:pop .45s ease forwards}
+    .card:nth-child(1){animation-delay:.05s}
+    .card:nth-child(2){animation-delay:.10s}
+    .card:nth-child(3){animation-delay:.15s}
+    .card:nth-child(4){animation-delay:.20s}
+    .card:nth-child(5){animation-delay:.25s}
+    .card:nth-child(6){animation-delay:.30s}
+    .card:nth-child(7){animation-delay:.35s}
+    @keyframes pop{to{opacity:1; transform:translateY(0)}}
+    @media (max-width:720px){ .cards{justify-content:center} .card{width:92%} }
+    .notice{background:#fff3cd;border:1px solid #ffeeba;color:#856404;padding:12px;border-radius:8px}
   </style>
 </head>
 <body>
-<header>
-  <img class="logo" src="jinpng.png" alt="logo"/>
-  <h1>每日要闻简报（最近一周）</h1>
-  <p class="meta">自动生成，来源：公开新闻 RSS / Google News</p>
-</header>
-<main>
-<section class="brief"><h2>每日要闻 2026-07-15</h2><p class="meta">2026-07-15 — ID: GWa4kocm</p>信息瞬息万变，谨慎甄别与及时跟进是关键。 [ID: GWa4kocm]<br/><br/>全球要闻:<br/>1. Prenatal and Postpartum Fitness - Global News (https://news.google.com/rss/articles/CBMieEFVX3lxTE9GakktZ0hmbTNCdVlleThRTG9lbVJQUGZjOTVYQnpYcGgyNHZ3NmFkMWs0Yk0yV1hsNTAtZmJnTzYtWThiZzJub1NlSFFqN2RyeXNvN0R0bFVzbldQN2ZJd0FmNDhhazhGTVp3ME1mRFNRNFFYdXRTRg?oc=5)<br/>2. Dr. Neil Hammerschlag Dives Into Shark Week and Atlantic Shark Expeditions - Global News (https://news.google.com/rss/articles/CBMisAFBVV95cUxNWWlwRWd2cjRIbGdKX05NY0N1YzFPalZuZG9OQzZqWl8wUFZPTmRYUlRyenNTeVhuUGhXanRhZDhJQ3JkQ3VOVmZZYUpJM01SZlRmblBLR3J2Z2MtZUpHYmNMeEdHYjBkWV9hT3BIY2FlVG44OExxTnltaVhrT3RUYXV1S25KS0Vid0NEN1VJWWFmUHJQU0RkRll5Q2VQUHhEQjA4TUFVWVE4OWdVS1ZvMw?oc=5)<br/>3. ‘If we die, we die together’: Wife of man sucked from plane window speaks out - Global News (https://news.google.com/rss/articles/CBMikgFBVV95cUxNanI4ODZOazFkV2I0Tk5HQmpTTnZyZ1UzZEd1d0VXN1EwRmhrdDhYR0ozZXNVZl9JVDVKNjdmZzM5V20zeUpCUGRsUFhzeXBta3lPSDlFVVhhZEE5eGFRX0ZQVUZiU0RlQ2RndWx6cHRCb2tiY0FpeUM3WVpWSXBHMi1FRk...</section>
-<section class="brief"><h2>每日要闻 2026-07-15</h2><p class="meta">2026-07-15 — ID: XyEEwBKE</p>信息瞬息万变，谨慎甄别与及时跟进是关键。 [ID: XyEEwBKE]<br/><br/>全球要闻:<br/>1. Dr. Neil Hammerschlag Dives Into Shark Week and Atlantic Shark Expeditions - Global News (https://news.google.com/rss/articles/CBMisAFBVV95cUxNWWlwRWd2cjRIbGdKX05NY0N1YzFPalZuZG9OQzZqWl8wUFZPTmRYUlRyenNTeVhuUGhXanRhZDhJQ3JkQ3VOVmZZYUpJM01SZlRmblBLR3J2Z2MtZUpHYmNMeEdHYjBkWV9hT3BIY2FlVG44OExxTnltaVhrT3RUYXV1S25KS0Vid0NEN1VJWWFmUHJQU0RkRll5Q2VQUHhEQjA4TUFVWVE4OWdVS1ZvMw?oc=5)<br/>2. ‘If we die, we die together’: Wife of man sucked from plane window speaks out - Global News (https://news.google.com/rss/articles/CBMikgFBVV95cUxNanI4ODZOazFkV2I0Tk5HQmpTTnZyZ1UzZEd1d0VXN1EwRmhrdDhYR0ozZXNVZl9JVDVKNjdmZzM5V20zeUpCUGRsUFhzeXBta3lPSDlFVVhhZEE5eGFRX0ZQVUZiU0RlQ2RndWx6cHRCb2tiY0FpeUM3WVpWSXBHMi1FRkxwLXBZZFl2QldtaWdkQQ?oc=5)<br/>3. Calgary dog park safety in question over city-planted Ohio Buckeye trees - Global News (https://news.google.com/rss/articles/CBMilgFBVV95cUxQU1dwZUtlOVd3MW1vd29nVnhZNlJPc1BXUldaZlJTTjltSV81MjJaR0lUbHJyR1hPc0tjZ0p5bVFHaDc3S3NLRnpFb...</section>
-<section class="brief"><h2>每日要闻 2026-07-15</h2><p class="meta">2026-07-15 — ID: 3vus9GLJ</p>信息瞬息万变，谨慎甄别与及时跟进是关键。 [ID: 3vus9GLJ]<br/><br/>全球要闻:<br/>1. Dr. Neil Hammerschlag Dives Into Shark Week and Atlantic Shark Expeditions - Global News (https://news.google.com/rss/articles/CBMisAFBVV95cUxNWWlwRWd2cjRIbGdKX05NY0N1YzFPalZuZG9OQzZqWl8wUFZPTmRYUlRyenNTeVhuUGhXanRhZDhJQ3JkQ3VOVmZZYUpJM01SZlRmblBLR3J2Z2MtZUpHYmNMeEdHYjBkWV9hT3BIY2FlVG44OExxTnltaVhrT3RUYXV1S25KS0Vid0NEN1VJWWFmUHJQU0RkRll5Q2VQUHhEQjA4TUFVWVE4OWdVS1ZvMw?oc=5)<br/>2. Calgary dog park safety in question over city-planted Ohio Buckeye trees - Global News (https://news.google.com/rss/articles/CBMilgFBVV95cUxQU1dwZUtlOVd3MW1vd29nVnhZNlJPc1BXUldaZlJTTjltSV81MjJaR0lUbHJyR1hPc0tjZ0p5bVFHaDc3S3NLRnpFbExUSjBDSTZ6MU9QZEJSZ3dLbGNGZlBpaElQNFlnanI1alE5RGNJZFhxem9XN01nUDhfOFBCOHk4REwycjB5NXF5TlNhMFNIREZmbUE?oc=5)<br/>3. ‘If we die, we die together’: Wife of man sucked from plane window speaks out - Global News (https://news.google.com/rss/articles/CBMikgFBVV95cUxNanI4ODZOazFkV2I0Tk5HQmpTTnZyZ1UzZEd1d0VXN1EwRmhrdDhYR0ozZXNVZl9JVDVKNjdmZzM5V20zeUpC...</section>
-</main>
-<footer>
-  <p class="meta">更新于 2026-07-15 12:58:46 UTC（本地时间）</p>
-</footer>
+  <header>
+    <img src="jinpng.png" alt="logo" />
+    <div>
+      <h1>每日要闻简报（最近一周）</h1>
+      <div class="meta">自动从 Supabase 拉取并展示，最多 7 条（如果未配置，请参照提示）</div>
+    </div>
+  </header>
+
+  <div class="controls">
+    <button id="refreshBtn">刷新</button>
+    <span id="status" style="margin-left:12px;color:#666"></span>
+  </div>
+
+  <main>
+    <div id="error" style="margin-top:16px"></div>
+    <div class="cards" id="cards" aria-live="polite" style="margin-top:18px"></div>
+  </main>
+
+  <script type="module">
+    const statusEl = document.getElementById('status');
+    const cardsEl = document.getElementById('cards');
+    const errorEl = document.getElementById('error');
+    const refreshBtn = document.getElementById('refreshBtn');
+
+    let SUPS_URL = null;
+    let SUPS_ANON_KEY = null;
+
+    async function loadConfig(){
+      try{
+        const m = await import('./supabase_config.js');
+        SUPS_URL = m.SUPS_URL;
+        SUPS_ANON_KEY = m.SUPS_ANON_KEY;
+        return true;
+      }catch(e){
+        return false;
+      }
+    }
+
+    function showConfigInstructions(){
+      errorEl.innerHTML = `
+        <div class="notice">
+          未检测到配置文件 <code>supabase_config.js</code>。
+          请在仓库根目录创建 <code>supabase_config.js</code>，内容示例：
+          <pre style="white-space:pre-wrap">export const SUPS_URL = "https://your-project.supabase.co";
+export const SUPS_ANON_KEY = "&lt;YOUR_ANON_KEY&gt;";</pre>
+          仅放入 Supabase 的 anon 公钥（用于只读），不要放 service_role key。保存后刷新此页面。
+        </div>`;
+    }
+
+    function cleanCards(){ cardsEl.innerHTML = ''; }
+
+    function renderCard(rec, idx){
+      const div = document.createElement('article');
+      div.className = 'card';
+      const title = rec.title || `每日要闻 ${rec.date || ''}`;
+      const date = rec.date || '';
+      const uid = rec.uid || '';
+      const html = rec.html || (rec.content||'').replace(/\n/g,'<br/>');
+      const sources = rec.source_urls || [];
+
+      div.innerHTML = `
+        <h2>${escapeHtml(title)}</h2>
+        <div class="meta">${escapeHtml(date)} — ID: ${escapeHtml(uid)} <span class="badge">${idx+1}</span></div>
+        <div class="content">${html}</div>
+        <div class="links">${sources.slice(0,3).map(s=>`<div><a href="${escapeAttr(s)}" target="_blank" rel="noopener">来源</a></div>`).join('')}</div>
+      `;
+      cardsEl.appendChild(div);
+    }
+
+    function escapeHtml(s){ if(!s) return ''; return String(s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c]); }
+    function escapeAttr(s){ return escapeHtml(s).replace(/"/g,'%22'); }
+
+    async function fetchBriefs(){
+      if(!SUPS_URL || !SUPS_ANON_KEY) {
+        showConfigInstructions();
+        statusEl.textContent = '';
+        return;
+      }
+      statusEl.textContent = '拉取中...';
+      errorEl.innerHTML = '';
+      try{
+        const today = new Date();
+        const since = new Date(today.getFullYear(), today.getMonth(), today.getDate() - 6).toISOString().slice(0,10);
+        const url = `${SUPS_URL.replace(/\/+$/,'')}/rest/v1/briefs?date=gte.${since}&order=date.desc&limit=7&select=*`;
+        const r = await fetch(url, { method:'GET', headers: { 'apikey': SUPS_ANON_KEY, 'Authorization': `Bearer ${SUPS_ANON_KEY}` } });
+        if(!r.ok){
+          const txt = await r.text();
+          throw new Error(`请求返回 ${r.status}: ${txt}`);
+        }
+        const data = await r.json();
+        cleanCards();
+        if(!Array.isArray(data) || data.length===0){
+          errorEl.innerHTML = '<div class="notice">最近一周没有可显示的简报。</div>';
+          statusEl.textContent = '';
+          return;
+        }
+        data.slice(0,7).forEach((rec, idx)=> renderCard(rec, idx));
+        statusEl.textContent = `显示 ${Math.min(data.length,7)} 条`;
+      }catch(err){
+        errorEl.innerHTML = `<div class="notice">拉取失败：${escapeHtml(err.message)}</div>`;
+        statusEl.textContent = '';
+      }
+    }
+
+    refreshBtn.addEventListener('click', ()=>{ fetchBriefs(); });
+
+    (async ()=>{
+      const ok = await loadConfig();
+      if(!ok){ showConfigInstructions(); return; }
+      await fetchBriefs();
+    })();
+  </script>
 </body>
 </html>
