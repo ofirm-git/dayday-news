@@ -1,0 +1,19 @@
+name: Test AA secret
+
+on:
+  push:
+    branches:
+      - AAtest
+
+jobs:
+  check-secret:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check secret AA
+        shell: bash
+        run: |
+          if [ -n "${{ secrets.AA }}" ]; then
+            echo "Secret AA is SET"
+          else
+            echo "Secret AA is EMPTY"
+          fi
