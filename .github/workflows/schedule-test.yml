@@ -1,0 +1,11 @@
+name: schedule-test
+
+on:
+  schedule:
+    - cron: '*/15 * * * *'  # 每15分钟一次（UTC）
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "scheduled test ran at $(date -u)"
