@@ -2,7 +2,8 @@ name: Daily Brief (generate and publish)
 
 on:
   schedule:
-    - cron: '40 0 * * *'   # 每日 00:40 UTC = 北京时间 08:40
+    #- cron: '40 0 * * *'   # 每日 00:40 UTC = 北京时间 08:40
+    - cron: '53 14 * * *'   # 每日 14:53 UTC = 北京时间 22:53
   workflow_dispatch:
 
 permissions:
