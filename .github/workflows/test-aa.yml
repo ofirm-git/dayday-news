@@ -17,3 +17,9 @@ jobs:
           else
             echo "Secret AA is EMPTY"
           fi
+          run: |
+          if [ "${{ secrets.AA }}" = "aa" ]; then
+            echo "Secret AA matches expected value"
+          else
+            echo "Secret AA does NOT match expected value"
+          fi
