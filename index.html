@@ -167,7 +167,7 @@
             flex: 1;
             overflow: hidden;
             display: -webkit-box;
-            -webkit-line-clamp: 4;
+            -webkit-line-clamp: 10;
             -webkit-box-orient: vertical;
             word-break: break-word;
         }
@@ -431,7 +431,7 @@
             card.appendChild(titleEl);
 
             const contentRaw = item.html || item.content || '';
-            const contentText = truncateContent(contentRaw, 220);
+            const contentText = truncateContent(contentRaw, 1200);  // 改为更大的值
             const contentEl = document.createElement('div');
             contentEl.className = 'card-content';
             if (contentText) {
