@@ -418,48 +418,71 @@
             return fragment;
         }
 
-        function createCard(item) {
-            const card = document.createElement('div');
-            card.className = 'card';
+function createCard(item) {
+    const card = document.createElement('div');
+    card.className = 'card';
 
-            const dateEl = document.createElement('div');
-            dateEl.className = 'card-date';
-            dateEl.textContent = formatDate(item.date);
-            card.appendChild(dateEl);
+    // ---- 日期 ----
+    const dateEl = document.createElement('div');
+    dateEl.className = 'card-date';
+    dateEl.textContent = formatDate(item.date);
+    card.appendChild(dateEl);
 
-            const titleEl = document.createElement('div');
-            titleEl.className = 'card-title';
-            const titleText = item.title && item.title.trim() ? item.title.trim() : '📄 无标题';
-            titleEl.textContent = titleText;
-            card.appendChild(titleEl);
+    // ---- 标题 ----
+    const titleEl = document.createElement('div');
+    titleEl.className = 'card-title';
+    const titleText = item.title && item.title.trim() ? item.title.trim() : '📄 无标题';
+    titleEl.textContent = titleText;
+    card.appendChild(titleEl);
 
-            const contentRaw = item.html || item.content || '';
-            const contentText = truncateContent(contentRaw, 1200);  // 改为更大的值
-            const contentEl = document.createElement('div');
-            contentEl.className = 'card-content';
-            if (contentText) {
-                contentEl.textContent = contentText;
-            } else {
-                contentEl.textContent = '（暂无摘要）';
-                contentEl.style.color = '#a0aec0';
-                contentEl.style.fontStyle = 'italic';
-            }
-            card.appendChild(contentEl);
+    // ---- 内容（重点修改部分） ----
+    const contentRaw = item.html || item.content || '';
+    // 去除 HTML 标签（避免脚本注入），仅保留纯文本
+    let plainText = contentRaw.replace(/<[^>]+>/g, '').trim();
 
-            const sourcesWrap = document.createElement('div');
-            sourcesWrap.className = 'card-sources';
-            const sourcesFragment = renderSources(item.source_urls);
-            if (sourcesFragment) {
-                sourcesWrap.appendChild(sourcesFragment);
-            } else {
-                const noSrc = document.createElement('span');
-                noSrc.className = 'no-source';
-                noSrc.textContent = '📎 无来源链接';
-                sourcesWrap.appendChild(noSrc);
-            }
-            card.appendChild(sourcesWrap);
-            return card;
-        }
+    // 为三个关键词添加换行和加粗（形成分段）
+    const keywords = ['全球要闻', '中国要闻', '大A相关'];
+    // 先替换关键词，在它们前面插入换行和加粗标签
+    keywords.forEach(kw => {
+        // 注意：使用正则全局替换，避免漏掉多个
+        // 由于关键词可能连续出现，这里简单处理：在关键词前加 \n\n<strong>，后加 </strong>
+        // 但为了保留关键词后面的内容，我们需要匹配关键词及其后续文本（直到下一个关键词或结尾）
+        // 更简单直接：只替换关键词本身，然后统一处理换行
+        // 替换为：\n\n<strong>关键词</strong>
+        const regex = new RegExp(kw, 'g');
+        plainText = plainText.replace(regex, `\n\n<strong>${kw}</strong>`);
+    });
+
+    // 将换行符转换为 <br>（HTML 中换行）
+    let formattedHtml = plainText.replace(/\n/g, '<br>');
+
+    // 如果内容为空，显示占位符
+    if (!formattedHtml || formattedHtml === '<br>') {
+        formattedHtml = '（暂无摘要）';
+    }
+
+    const contentEl = document.createElement('div');
+    contentEl.className = 'card-content';
+    // 使用 innerHTML 以支持加粗和换行（数据来自自己的数据库，可信）
+    contentEl.innerHTML = formattedHtml;
+    card.appendChild(contentEl);
+
+    // ---- 来源链接 ----
+    const sourcesWrap = document.createElement('div');
+    sourcesWrap.className = 'card-sources';
+    const sourcesFragment = renderSources(item.source_urls);
+    if (sourcesFragment) {
+        sourcesWrap.appendChild(sourcesFragment);
+    } else {
+        const noSrc = document.createElement('span');
+        noSrc.className = 'no-source';
+        noSrc.textContent = '📎 无来源链接';
+        sourcesWrap.appendChild(noSrc);
+    }
+    card.appendChild(sourcesWrap);
+
+    return card;
+}
 
         // ----- 主加载函数 -----
         async function loadBriefs() {
