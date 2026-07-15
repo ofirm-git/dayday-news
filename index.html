@@ -1,181 +1,616 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>每日要闻简报（最近一周）</title>
-  <link rel="icon" href="jinpng.png" />
-  <style>
-    :root{--bg:#f7f8fa;--card:#fff;--accent:#0366d6}
-    body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;background:var(--bg);margin:0;padding:20px;color:#111}
-    header{display:flex;align-items:center;gap:12px}
-    header img{width:56px;height:56px;object-fit:contain}
-    header h1{margin:0;font-size:1.4rem}
-    .meta{color:#666;font-size:0.9rem}
-    .controls{margin-top:12px}
-    .cards{display:flex;flex-wrap:wrap;gap:12px;margin-top:18px}
-    .card{background:var(--card);border-radius:10px;padding:14px;width:300px;box-shadow:0 8px 20px rgba(0,0,0,0.06);transition:transform .18s;cursor:default}
-    .card:hover{transform:translateY(-6px)}
-    .card h2{margin:0 0 6px 0;font-size:1rem}
-    .card .meta{font-size:0.8rem;color:#666}
-    .card .content{margin-top:8px;font-size:0.95rem;color:#222;max-height:180px;overflow:auto}
-    .badge{display:inline-block;background:var(--accent);color:#fff;padding:4px 8px;border-radius:8px;font-size:0.8rem}
-    .notice{background:#fff3cd;border:1px solid #ffeeba;color:#856404;padding:12px;border-radius:8px}
-    #debugPre{white-space:pre-wrap;max-height:240px;overflow:auto;background:#fff;padding:12px;border:1px solid #ddd;margin-top:12px}
-    @media (max-width:720px){ .card{width:92%} .cards{justify-content:center} }
-    button{padding:6px 10px;border-radius:6px;border:1px solid #ddd;background:#fff;cursor:pointer}
-  </style>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>新闻简报 · 最近七天</title>
+    <link rel="icon" type="image/png" href="jinpng.png" />
+    <!-- 使用 Supabase JS SDK -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2">
+    </script>
+    <style>
+        /* ---------- 全局重置 & 基础 ---------- */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background: linear-gradient(145deg, #f6f9fc 0%, #edf2f7 100%);
+            min-height: 100vh;
+            padding: 2rem 1.5rem 3rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        /* ---------- 容器 ---------- */
+        .container {
+            max-width: 1360px;
+            width: 100%;
+        }
+
+        /* ---------- 头部 ---------- */
+        .header {
+            text-align: center;
+            margin-bottom: 3rem;
+            padding: 1.5rem 0 0.5rem;
+        }
+
+        .header h1 {
+            font-size: 2.6rem;
+            font-weight: 700;
+            color: #1a202c;
+            letter-spacing: -0.5px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.6rem;
+            flex-wrap: wrap;
+        }
+
+        .header h1 span {
+            background: linear-gradient(135deg, #2b6cb0, #2c5282);
+            color: #fff;
+            font-size: 1.2rem;
+            font-weight: 600;
+            padding: 0.2rem 1rem;
+            border-radius: 40px;
+            letter-spacing: 0.3px;
+        }
+
+        .header .sub {
+            margin-top: 0.6rem;
+            color: #4a5568;
+            font-size: 1.05rem;
+            font-weight: 400;
+            letter-spacing: 0.3px;
+        }
+
+        .header .sub i {
+            font-style: normal;
+            background: #e2e8f0;
+            padding: 0.2rem 0.9rem;
+            border-radius: 20px;
+            color: #2d3748;
+            font-size: 0.9rem;
+        }
+
+        /* ---------- 加载 & 空状态 ---------- */
+        .status-box {
+            text-align: center;
+            padding: 4rem 1.5rem;
+            color: #4a5568;
+            font-size: 1.1rem;
+        }
+
+        .status-box .spinner {
+            display: inline-block;
+            width: 40px;
+            height: 40px;
+            border: 4px solid #e2e8f0;
+            border-top-color: #2b6cb0;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin-bottom: 1.2rem;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .status-box .empty-icon {
+            font-size: 3.6rem;
+            margin-bottom: 0.8rem;
+            opacity: 0.6;
+        }
+
+        /* ---------- 卡片网格 ---------- */
+        .cards-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+            gap: 1.8rem;
+            margin-top: 0.5rem;
+        }
+
+        /* ---------- 浮动卡片 ---------- */
+        .card {
+            background: #ffffff;
+            border-radius: 20px;
+            padding: 1.6rem 1.8rem 1.8rem;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.06), 0 2px 8px rgba(0, 0, 0, 0.03);
+            transition: transform 0.25s ease, box-shadow 0.30s ease, border-color 0.25s ease;
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            backdrop-filter: blur(2px);
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            position: relative;
+        }
+
+        .card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 20px 50px rgba(43, 108, 176, 0.12), 0 8px 24px rgba(0, 0, 0, 0.06);
+            border-color: rgba(43, 108, 176, 0.15);
+        }
+
+        /* 卡片顶部：日期 */
+        .card-date {
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: #2b6cb0;
+            background: #ebf4ff;
+            display: inline-block;
+            padding: 0.2rem 1rem;
+            border-radius: 30px;
+            letter-spacing: 0.4px;
+            align-self: flex-start;
+            margin-bottom: 0.9rem;
+            border: 1px solid rgba(43, 108, 176, 0.08);
+        }
+
+        /* 标题 */
+        .card-title {
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: #1a202c;
+            line-height: 1.4;
+            margin-bottom: 0.7rem;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            word-break: break-word;
+        }
+
+        .card-title a {
+            color: inherit;
+            text-decoration: none;
+        }
+
+        .card-title a:hover {
+            color: #2b6cb0;
+        }
+
+        /* 内容摘要 */
+        .card-content {
+            font-size: 0.95rem;
+            line-height: 1.7;
+            color: #2d3748;
+            flex: 1;
+            overflow: hidden;
+            display: -webkit-box;
+            -webkit-line-clamp: 4;
+            -webkit-box-orient: vertical;
+            word-break: break-word;
+        }
+
+        .card-content p {
+            margin-bottom: 0.4rem;
+        }
+
+        .card-content p:last-child {
+            margin-bottom: 0;
+        }
+
+        /* 来源链接 */
+        .card-sources {
+            margin-top: 1.2rem;
+            padding-top: 0.9rem;
+            border-top: 1px solid #edf2f7;
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 0.5rem 0.8rem;
+        }
+
+        .card-sources .label {
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: #a0aec0;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .card-sources a {
+            font-size: 0.85rem;
+            color: #2b6cb0;
+            text-decoration: none;
+            background: #f7fafc;
+            padding: 0.2rem 0.9rem;
+            border-radius: 30px;
+            border: 1px solid #edf2f7;
+            transition: background 0.2s, border-color 0.2s;
+            max-width: 200px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .card-sources a:hover {
+            background: #ebf4ff;
+            border-color: #bee3f8;
+            color: #1a4f8b;
+        }
+
+        .card-sources .no-source {
+            font-size: 0.8rem;
+            color: #a0aec0;
+        }
+
+        /* ---------- 底部 ---------- */
+        .footer {
+            margin-top: 3.5rem;
+            padding: 1.2rem 0 0.3rem;
+            text-align: center;
+            color: #a0aec0;
+            font-size: 0.85rem;
+            border-top: 1px solid #e2e8f0;
+            width: 100%;
+            max-width: 600px;
+        }
+
+        .footer span {
+            color: #718096;
+        }
+
+        /* ---------- 响应式 ---------- */
+        @media (max-width: 768px) {
+            body {
+                padding: 1.2rem 0.8rem 2rem;
+            }
+
+            .header h1 {
+                font-size: 1.8rem;
+            }
+
+            .header h1 span {
+                font-size: 0.9rem;
+                padding: 0.1rem 0.8rem;
+            }
+
+            .cards-grid {
+                grid-template-columns: 1fr;
+                gap: 1.2rem;
+            }
+
+            .card {
+                padding: 1.2rem 1.2rem 1.4rem;
+            }
+
+            .card-title {
+                font-size: 1.1rem;
+            }
+
+            .card-content {
+                font-size: 0.9rem;
+                -webkit-line-clamp: 3;
+            }
+        }
+
+        @media (min-width: 769px) and (max-width: 1024px) {
+            .cards-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        /* ---------- 工具类 ---------- */
+        .hidden {
+            display: none !important;
+        }
+
+        /* 错误提示 */
+        .error-box {
+            background: #fff5f5;
+            border: 1px solid #fed7d7;
+            border-radius: 16px;
+            padding: 1.8rem 2rem;
+            color: #c53030;
+            text-align: center;
+            max-width: 600px;
+            margin: 2rem auto;
+        }
+
+        .error-box .err-icon {
+            font-size: 2.4rem;
+            margin-bottom: 0.6rem;
+        }
+
+        .error-box .err-msg {
+            font-weight: 500;
+            word-break: break-word;
+        }
+
+        .error-box .err-detail {
+            font-size: 0.9rem;
+            color: #9b2c2c;
+            margin-top: 0.4rem;
+            opacity: 0.8;
+        }
+    </style>
 </head>
 <body>
-  <header>
-    <img src="jinpng.png" alt="logo" />
-    <div>
-      <h1>每日要闻简报（最近一周）</h1>
-      <div class="meta">直接从 Supabase 拉取并展示（最多 7 条）。</div>
+
+    <div class="container">
+
+        <!-- ====== 头部 ====== -->
+        <header class="header">
+            <h1>
+                📰 新闻简报
+                <span>最近七天</span>
+            </h1>
+            <div class="sub">
+                <i>📅 每日精选 · 一览无余</i>
+            </div>
+        </header>
+
+        <!-- ====== 状态 / 加载 ====== -->
+        <div id="loadingStatus" class="status-box">
+            <div class="spinner"></div>
+            <div>正在加载简报…</div>
+        </div>
+
+        <!-- ====== 错误展示 ====== -->
+        <div id="errorBox" class="error-box hidden">
+            <div class="err-icon">⚠️</div>
+            <div class="err-msg" id="errorMsg">加载失败</div>
+            <div class="err-detail" id="errorDetail"></div>
+        </div>
+
+        <!-- ====== 空状态 ====== -->
+        <div id="emptyStatus" class="status-box hidden">
+            <div class="empty-icon">📭</div>
+            <div>最近七天暂无简报</div>
+            <div style="font-size:0.9rem;color:#a0aec0;margin-top:0.3rem;">请稍后再来看看吧</div>
+        </div>
+
+        <!-- ====== 卡片网格 ====== -->
+        <div id="cardsGrid" class="cards-grid hidden"></div>
+
+        <!-- ====== 底部 ====== -->
+        <footer class="footer">
+            <span>📌 数据来源 · Supabase</span>
+        </footer>
+
     </div>
-  </header>
 
-  <div class="controls">
-    <button id="refreshBtn">刷新</button>
-    <button id="toggleDebug" style="margin-left:8px">显示原始响应</button>
-    <span id="status" style="margin-left:12px;color:#666"></span>
-  </div>
+    <script>
+        (function() {
+            'use strict';
 
-  <main>
-    <div id="error" style="margin-top:16px"></div>
-    <div class="cards" id="cards" aria-live="polite"></div>
-    <div id="debugWrap" style="display:none">
-      <div id="debugPre"></div>
-    </div>
-  </main>
+            // ----------------------------------------------------------------
+            // 1. 环境变量 —— 占位符将由 GitHub Actions 在构建时替换
+            //    本地调试时，可手动填写真实值（注意不要提交到公开仓库）
+            // ----------------------------------------------------------------
+            const SUPABASE_URL = '{{SUPS_URL02}}';
+            const SUPABASE_ANON_KEY = '{{SUPS_API021}}';
 
-  <script>
-    // CONFIG: if you prefer embedding the anon key here (not recommended), set FALLBACK_* below.
-    const FALLBACK_SUPS_URL = ''; // e.g. 'https://your.supabase.co'  OR leave empty to require supabase_config.js
-    const FALLBACK_ANON_KEY = ''; // e.g. 'sb_publishable_...' OR leave empty
+            // 如果占位符未被替换（本地直接打开），给出友好提示
+            const isPlaceholder = (val) => val.startsWith('{{') && val.endsWith('}}');
 
-    const statusEl = document.getElementById('status');
-    const cardsEl = document.getElementById('cards');
-    const errorEl = document.getElementById('error');
-    const debugPre = document.getElementById('debugPre');
-    const debugWrap = document.getElementById('debugWrap');
-    const refreshBtn = document.getElementById('refreshBtn');
-    const toggleDebugBtn = document.getElementById('toggleDebug');
+            // ----------------------------------------------------------------
+            // 2. DOM 引用
+            // ----------------------------------------------------------------
+            const loadingEl = document.getElementById('loadingStatus');
+            const errorBox = document.getElementById('errorBox');
+            const errorMsg = document.getElementById('errorMsg');
+            const errorDetail = document.getElementById('errorDetail');
+            const emptyEl = document.getElementById('emptyStatus');
+            const gridEl = document.getElementById('cardsGrid');
 
-    let SUPS_URL = null;
-    let SUPS_ANON_KEY = null;
-    let lastRaw = null;
+            // ----------------------------------------------------------------
+            // 3. 工具函数
+            // ----------------------------------------------------------------
+            function formatDate(dateStr) {
+                if (!dateStr) return '未知日期';
+                try {
+                    const d = new Date(dateStr + 'T00:00:00');
+                    if (isNaN(d.getTime())) return dateStr;
+                    const year = d.getFullYear();
+                    const month = String(d.getMonth() + 1).padStart(2, '0');
+                    const day = String(d.getDate()).padStart(2, '0');
+                    const weekdays = ['日', '一', '二', '三', '四', '五', '六'];
+                    const wd = weekdays[d.getDay()];
+                    return `${year}年${month}月${day}日 · 周${wd}`;
+                } catch (_) {
+                    return dateStr;
+                }
+            }
 
-    // Try to load config by fetching supabase_config.js as text and extracting values (avoids dynamic import issues)
-    async function loadConfig() {
-      if (FALLBACK_SUPS_URL && FALLBACK_ANON_KEY) {
-        SUPS_URL = FALLBACK_SUPS_URL;
-        SUPS_ANON_KEY = FALLBACK_ANON_KEY;
-        return true;
-      }
-      try {
-        const resp = await fetch('./supabase_config.js', {cache: 'no-store'});
-        if (!resp.ok) return false;
-        const txt = await resp.text();
-        // naive parse for export const SUPS_URL = "..."
-        const urlMatch = txt.match(/SUPS_URL\s*=\s*['"]([^'"]+)['"]/);
-        const keyMatch = txt.match(/SUPS_ANON_KEY\s*=\s*['"]([^'"]+)['"]/);
-        if (urlMatch) SUPS_URL = urlMatch[1].trim();
-        if (keyMatch) SUPS_ANON_KEY = keyMatch[1].trim();
-        return !!(SUPS_URL && SUPS_ANON_KEY);
-      } catch (e) {
-        return false;
-      }
-    }
+            // 安全截取内容（用于摘要）
+            function truncateContent(html, maxLen = 220) {
+                if (!html) return '';
+                // 移除 HTML 标签，只取纯文本
+                const div = document.createElement('div');
+                div.innerHTML = html;
+                let text = div.textContent || div.innerText || '';
+                text = text.replace(/\s+/g, ' ').trim();
+                if (text.length <= maxLen) return text;
+                return text.slice(0, maxLen) + '…';
+            }
 
-    function showConfigInstructions() {
-      errorEl.innerHTML = `
-        <div class="notice">
-          未检测到有效的 <code>supabase_config.js</code> 或未配置 anon key。请在仓库根创建 <code>supabase_config.js</code>，示例：<br/>
-          <pre style="white-space:pre-wrap">export const SUPS_URL = "https://your-project.supabase.co";
-export const SUPS_ANON_KEY = "&lt;YOUR_ANON_KEY&gt;";</pre>
-          保存后刷新页面。或把 anon key 填入顶部 FALLBACK_*（仅用于测试）。
-        </div>`;
-      statusEl.textContent = '';
-    }
+            // 渲染来源链接
+            function renderSources(sourceUrls) {
+                if (!sourceUrls) return null;
+                let urls = [];
+                if (Array.isArray(sourceUrls)) {
+                    urls = sourceUrls.filter(u => typeof u === 'string' && u.trim().length > 0);
+                } else if (typeof sourceUrls === 'string') {
+                    try {
+                        const parsed = JSON.parse(sourceUrls);
+                        if (Array.isArray(parsed)) {
+                            urls = parsed.filter(u => typeof u === 'string' && u.trim().length > 0);
+                        }
+                    } catch (_) { /* 忽略 */ }
+                }
+                if (urls.length === 0) return null;
 
-    function escapeHtml(s){ if(s===null || s===undefined) return ''; return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c]); }
+                const fragment = document.createDocumentFragment();
+                const label = document.createElement('span');
+                label.className = 'label';
+                label.textContent = '🔗 来源';
+                fragment.appendChild(label);
 
-    function renderCard(rec, idx) {
-      const div = document.createElement('article');
-      div.className = 'card';
-      const title = rec.title || (`每日要闻 ${rec.date||''}`);
-      const date = rec.date || rec.inserted_at || '';
-      const uid = rec.uid || '';
-      // prefer html field if present (server-provided), else content
-      const html = rec.html ? rec.html : (rec.content ? escapeHtml(rec.content).replace(/\n/g,'<br/>') : '');
-      const sources = Array.isArray(rec.source_urls) ? rec.source_urls : (rec.source_urls ? JSON.parse(rec.source_urls) : []);
-      div.innerHTML = `
-        <h2>${escapeHtml(title)}</h2>
-        <div class="meta">${escapeHtml(date)} — ID: ${escapeHtml(uid)} <span class="badge">${idx+1}</span></div>
-        <div class="content">${html}</div>
-        <div class="links">${(sources.slice?sources.slice(0,3):[]).map(s=>`<div><a href="${escapeHtml(s)}" target="_blank" rel="noopener">来源</a></div>`).join('')}</div>
-      `;
-      cardsEl.appendChild(div);
-    }
+                urls.forEach((url, idx) => {
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.target = '_blank';
+                    a.rel = 'noopener noreferrer';
+                    // 提取域名作为显示文本
+                    let display = url;
+                    try {
+                        const u = new URL(url);
+                        display = u.hostname.replace(/^www\./, '');
+                        if (display.length > 30) display = display.slice(0, 28) + '…';
+                    } catch (_) { /* 保留原样 */ }
+                    a.textContent = display;
+                    a.title = url;
+                    fragment.appendChild(a);
+                });
 
-    function showEmptyNotice() {
-      cardsEl.innerHTML = '';
-      errorEl.innerHTML = '<div class="notice">最近一周没有可显示的简报。</div>';
-      statusEl.textContent = '';
-    }
+                return fragment;
+            }
 
-    async function fetchBriefs() {
-      errorEl.innerHTML = '';
-      cardsEl.innerHTML = '';
-      statusEl.textContent = '拉取中...';
-      try {
-        if (!SUPS_URL || !SUPS_ANON_KEY) {
-          showConfigInstructions();
-          return;
-        }
-        const sinceISO = new Date(Date.now() - 6*24*60*60*1000).toISOString();
-        // Use inserted_at for reliability
-        const url = SUPS_URL.replace(/\/+$/,'') + '/rest/v1/briefs?inserted_at=gte.' + encodeURIComponent(sinceISO) + '&order=inserted_at.desc&limit=7&select=*';
-        const r = await fetch(url, { method: 'GET', headers: { 'apikey': SUPS_ANON_KEY, 'Authorization': 'Bearer ' + SUPS_ANON_KEY } });
-        const text = await r.text();
-        let data;
-        try { data = JSON.parse(text); } catch(e) { throw new Error('非 JSON 响应: ' + text); }
-        lastRaw = { status: r.status, body: data };
-        debugPre.textContent = JSON.stringify(lastRaw, null, 2);
+            // 渲染单条简报为卡片 DOM
+            function createCard(item) {
+                const card = document.createElement('div');
+                card.className = 'card';
 
-        if (!Array.isArray(data) || data.length === 0) {
-          showEmptyNotice();
-          return;
-        }
-        // render up to 7
-        cardsEl.innerHTML = '';
-        data.slice(0,7).forEach((rec, idx) => renderCard(rec, idx));
-        statusEl.textContent = `显示 ${Math.min(data.length,7)} 条`;
-        errorEl.innerHTML = '';
-      } catch (err) {
-        errorEl.innerHTML = `<div class="notice">拉取失败：${escapeHtml(err.message || String(err))}</div>`;
-        statusEl.textContent = '';
-      }
-    }
+                // 日期
+                const dateEl = document.createElement('div');
+                dateEl.className = 'card-date';
+                dateEl.textContent = formatDate(item.date);
+                card.appendChild(dateEl);
 
-    refreshBtn.addEventListener('click', () => fetchBriefs());
-    toggleDebugBtn.addEventListener('click', () => { debugWrap.style.display = debugWrap.style.display === 'none' ? 'block' : 'none'; });
+                // 标题
+                const titleEl = document.createElement('div');
+                titleEl.className = 'card-title';
+                const titleText = item.title && item.title.trim() ? item.title.trim() : '📄 无标题';
+                titleEl.textContent = titleText;
+                card.appendChild(titleEl);
 
-    // bootstrap
-    (async function init(){
-      const ok = await loadConfig();
-      if (!ok) {
-        // still try with fallback constants (if provided)
-        if (FALLBACK_SUPS_URL && FALLBACK_ANON_KEY) {
-          SUPS_URL = FALLBACK_SUPS_URL; SUPS_ANON_KEY = FALLBACK_ANON_KEY;
-        } else {
-          showConfigInstructions();
-          return;
-        }
-      }
-      await fetchBriefs();
-    })();
-  </script>
+                // 内容摘要（优先使用 html，其次 content）
+                const contentRaw = item.html || item.content || '';
+                const contentText = truncateContent(contentRaw, 220);
+                const contentEl = document.createElement('div');
+                contentEl.className = 'card-content';
+                if (contentText) {
+                    contentEl.textContent = contentText;
+                } else {
+                    contentEl.textContent = '（暂无摘要）';
+                    contentEl.style.color = '#a0aec0';
+                    contentEl.style.fontStyle = 'italic';
+                }
+                card.appendChild(contentEl);
+
+                // 来源链接
+                const sourcesWrap = document.createElement('div');
+                sourcesWrap.className = 'card-sources';
+                const sourcesFragment = renderSources(item.source_urls);
+                if (sourcesFragment) {
+                    sourcesWrap.appendChild(sourcesFragment);
+                } else {
+                    const noSrc = document.createElement('span');
+                    noSrc.className = 'no-source';
+                    noSrc.textContent = '📎 无来源链接';
+                    sourcesWrap.appendChild(noSrc);
+                }
+                card.appendChild(sourcesWrap);
+
+                return card;
+            }
+
+            // ----------------------------------------------------------------
+            // 4. 主逻辑：获取数据并渲染
+            // ----------------------------------------------------------------
+            async function loadBriefs() {
+                // 检查环境变量
+                if (isPlaceholder(SUPABASE_URL) || isPlaceholder(SUPABASE_ANON_KEY)) {
+                    showError(
+                        '环境变量未配置',
+                        '请确保在 GitHub Actions 中设置了 SUPS_URL02 和 SUPS_API021 秘密变量，' +
+                        '或本地调试时在代码中填写真实值。'
+                    );
+                    return;
+                }
+
+                // 初始化 Supabase 客户端
+                const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+                try {
+                    // 计算 7 天前的日期 (YYYY-MM-DD)
+                    const now = new Date();
+                    const sevenDaysAgo = new Date(now);
+                    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+                    const dateFilter = sevenDaysAgo.toISOString().split('T')[0];
+
+                    // 查询数据
+                    const { data, error } = await supabase
+                        .from('briefs')
+                        .select('*')
+                        .gte('date', dateFilter)
+                        .order('date', { ascending: false })
+                        .order('inserted_at', { ascending: false });
+
+                    if (error) {
+                        console.error('Supabase 查询错误:', error);
+                        showError('数据查询失败', error.message || '请检查网络或数据库配置');
+                        return;
+                    }
+
+                    // 隐藏加载状态
+                    loadingEl.classList.add('hidden');
+
+                    // 处理空数据
+                    if (!data || data.length === 0) {
+                        emptyEl.classList.remove('hidden');
+                        return;
+                    }
+
+                    // 渲染卡片
+                    gridEl.innerHTML = '';
+                    data.forEach(item => {
+                        const card = createCard(item);
+                        gridEl.appendChild(card);
+                    });
+                    gridEl.classList.remove('hidden');
+
+                } catch (err) {
+                    console.error('加载异常:', err);
+                    showError('加载异常', err.message || '请稍后重试');
+                }
+            }
+
+            // ----------------------------------------------------------------
+            // 5. 错误展示
+            // ----------------------------------------------------------------
+            function showError(msg, detail) {
+                loadingEl.classList.add('hidden');
+                emptyEl.classList.add('hidden');
+                gridEl.classList.add('hidden');
+                errorBox.classList.remove('hidden');
+                errorMsg.textContent = msg || '加载失败';
+                errorDetail.textContent = detail || '';
+            }
+
+            // ----------------------------------------------------------------
+            // 6. 启动
+            // ----------------------------------------------------------------
+            // 如果环境变量是占位符且未替换，直接报错（本地调试可手动修改）
+            if (isPlaceholder(SUPABASE_URL) || isPlaceholder(SUPABASE_ANON_KEY)) {
+                // 但不要阻塞，给出明确提示
+                console.warn('⚠️ 环境变量占位符未被替换，请在 GitHub Actions 中配置 secrets。');
+                // 如果是本地直接打开，会显示错误提示
+            }
+
+            loadBriefs();
+
+        })();
+    </script>
+
 </body>
 </html>
