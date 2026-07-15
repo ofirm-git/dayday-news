@@ -5,11 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>新闻简报 · 最近七天</title>
     <link rel="icon" type="image/png" href="jinpng.png" />
-    <!-- 使用 Supabase JS SDK -->
+    <!-- Supabase SDK（全局方式） -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2">
     </script>
     <style>
-        /* ---------- 全局重置 & 基础 ---------- */
+        /* ---------- 全局重置 ---------- */
         * {
             margin: 0;
             padding: 0;
@@ -26,13 +26,11 @@
             align-items: center;
         }
 
-        /* ---------- 容器 ---------- */
         .container {
             max-width: 1360px;
             width: 100%;
         }
 
-        /* ---------- 头部 ---------- */
         .header {
             text-align: center;
             margin-bottom: 3rem;
@@ -78,7 +76,6 @@
             font-size: 0.9rem;
         }
 
-        /* ---------- 加载 & 空状态 ---------- */
         .status-box {
             text-align: center;
             padding: 4rem 1.5rem;
@@ -109,7 +106,6 @@
             opacity: 0.6;
         }
 
-        /* ---------- 卡片网格 ---------- */
         .cards-grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
@@ -117,7 +113,6 @@
             margin-top: 0.5rem;
         }
 
-        /* ---------- 浮动卡片 ---------- */
         .card {
             background: #ffffff;
             border-radius: 20px;
@@ -138,7 +133,6 @@
             border-color: rgba(43, 108, 176, 0.15);
         }
 
-        /* 卡片顶部：日期 */
         .card-date {
             font-size: 0.8rem;
             font-weight: 600;
@@ -153,7 +147,6 @@
             border: 1px solid rgba(43, 108, 176, 0.08);
         }
 
-        /* 标题 */
         .card-title {
             font-size: 1.3rem;
             font-weight: 700;
@@ -167,16 +160,6 @@
             word-break: break-word;
         }
 
-        .card-title a {
-            color: inherit;
-            text-decoration: none;
-        }
-
-        .card-title a:hover {
-            color: #2b6cb0;
-        }
-
-        /* 内容摘要 */
         .card-content {
             font-size: 0.95rem;
             line-height: 1.7;
@@ -189,15 +172,6 @@
             word-break: break-word;
         }
 
-        .card-content p {
-            margin-bottom: 0.4rem;
-        }
-
-        .card-content p:last-child {
-            margin-bottom: 0;
-        }
-
-        /* 来源链接 */
         .card-sources {
             margin-top: 1.2rem;
             padding-top: 0.9rem;
@@ -242,7 +216,6 @@
             color: #a0aec0;
         }
 
-        /* ---------- 底部 ---------- */
         .footer {
             margin-top: 3.5rem;
             padding: 1.2rem 0 0.3rem;
@@ -258,34 +231,27 @@
             color: #718096;
         }
 
-        /* ---------- 响应式 ---------- */
         @media (max-width: 768px) {
             body {
                 padding: 1.2rem 0.8rem 2rem;
             }
-
             .header h1 {
                 font-size: 1.8rem;
             }
-
             .header h1 span {
                 font-size: 0.9rem;
                 padding: 0.1rem 0.8rem;
             }
-
             .cards-grid {
                 grid-template-columns: 1fr;
                 gap: 1.2rem;
             }
-
             .card {
                 padding: 1.2rem 1.2rem 1.4rem;
             }
-
             .card-title {
                 font-size: 1.1rem;
             }
-
             .card-content {
                 font-size: 0.9rem;
                 -webkit-line-clamp: 3;
@@ -298,12 +264,10 @@
             }
         }
 
-        /* ---------- 工具类 ---------- */
         .hidden {
             display: none !important;
         }
 
-        /* 错误提示 */
         .error-box {
             background: #fff5f5;
             border: 1px solid #fed7d7;
@@ -336,280 +300,219 @@
 <body>
 
     <div class="container">
-
-        <!-- ====== 头部 ====== -->
         <header class="header">
-            <h1>
-                📰 新闻简报
-                <span>最近七天</span>
-            </h1>
-            <div class="sub">
-                <i>📅 每日精选 · 一览无余</i>
-            </div>
+            <h1>📰 新闻简报 <span>最近七天</span></h1>
+            <div class="sub"><i>📅 每日精选 · 一览无余</i></div>
         </header>
 
-        <!-- ====== 状态 / 加载 ====== -->
         <div id="loadingStatus" class="status-box">
             <div class="spinner"></div>
             <div>正在加载简报…</div>
         </div>
 
-        <!-- ====== 错误展示 ====== -->
         <div id="errorBox" class="error-box hidden">
             <div class="err-icon">⚠️</div>
             <div class="err-msg" id="errorMsg">加载失败</div>
             <div class="err-detail" id="errorDetail"></div>
         </div>
 
-        <!-- ====== 空状态 ====== -->
         <div id="emptyStatus" class="status-box hidden">
             <div class="empty-icon">📭</div>
             <div>最近七天暂无简报</div>
             <div style="font-size:0.9rem;color:#a0aec0;margin-top:0.3rem;">请稍后再来看看吧</div>
         </div>
 
-        <!-- ====== 卡片网格 ====== -->
         <div id="cardsGrid" class="cards-grid hidden"></div>
 
-        <!-- ====== 底部 ====== -->
         <footer class="footer">
             <span>📌 数据来源 · Supabase</span>
         </footer>
-
     </div>
 
-    <script>
-        (function() {
-            'use strict';
+    <!-- 模块脚本：导入配置，并执行主逻辑 -->
+    <script type="importmap">
+        {
+            "imports": {
+                "./supabase_config.js": "./supabase_config.js"
+            }
+        }
+    </script>
+    <script type="module">
+        // ----- 导入配置 -----
+        import { SUPS_URL, SUPS_ANON_KEY } from './supabase_config.js';
 
-            // ----------------------------------------------------------------
-            // 1. 环境变量 —— 占位符将由 GitHub Actions 在构建时替换
-            //    本地调试时，可手动填写真实值（注意不要提交到公开仓库）
-            // ----------------------------------------------------------------
-            const SUPABASE_URL = '{{SUPS_URL02}}';
-            const SUPABASE_ANON_KEY = '{{SUPS_API021}}';
+        // ----- DOM 引用 -----
+        const loadingEl = document.getElementById('loadingStatus');
+        const errorBox = document.getElementById('errorBox');
+        const errorMsg = document.getElementById('errorMsg');
+        const errorDetail = document.getElementById('errorDetail');
+        const emptyEl = document.getElementById('emptyStatus');
+        const gridEl = document.getElementById('cardsGrid');
 
-            // 如果占位符未被替换（本地直接打开），给出友好提示
-            const isPlaceholder = (val) => val.startsWith('{{') && val.endsWith('}}');
+        // ----- 工具函数 -----
+        function formatDate(dateStr) {
+            if (!dateStr) return '未知日期';
+            try {
+                const d = new Date(dateStr + 'T00:00:00');
+                if (isNaN(d.getTime())) return dateStr;
+                const year = d.getFullYear();
+                const month = String(d.getMonth() + 1).padStart(2, '0');
+                const day = String(d.getDate()).padStart(2, '0');
+                const weekdays = ['日', '一', '二', '三', '四', '五', '六'];
+                const wd = weekdays[d.getDay()];
+                return `${year}年${month}月${day}日 · 周${wd}`;
+            } catch (_) {
+                return dateStr;
+            }
+        }
 
-            // ----------------------------------------------------------------
-            // 2. DOM 引用
-            // ----------------------------------------------------------------
-            const loadingEl = document.getElementById('loadingStatus');
-            const errorBox = document.getElementById('errorBox');
-            const errorMsg = document.getElementById('errorMsg');
-            const errorDetail = document.getElementById('errorDetail');
-            const emptyEl = document.getElementById('emptyStatus');
-            const gridEl = document.getElementById('cardsGrid');
+        function truncateContent(html, maxLen = 220) {
+            if (!html) return '';
+            const div = document.createElement('div');
+            div.innerHTML = html;
+            let text = div.textContent || div.innerText || '';
+            text = text.replace(/\s+/g, ' ').trim();
+            if (text.length <= maxLen) return text;
+            return text.slice(0, maxLen) + '…';
+        }
 
-            // ----------------------------------------------------------------
-            // 3. 工具函数
-            // ----------------------------------------------------------------
-            function formatDate(dateStr) {
-                if (!dateStr) return '未知日期';
+        function renderSources(sourceUrls) {
+            if (!sourceUrls) return null;
+            let urls = [];
+            if (Array.isArray(sourceUrls)) {
+                urls = sourceUrls.filter(u => typeof u === 'string' && u.trim().length > 0);
+            } else if (typeof sourceUrls === 'string') {
                 try {
-                    const d = new Date(dateStr + 'T00:00:00');
-                    if (isNaN(d.getTime())) return dateStr;
-                    const year = d.getFullYear();
-                    const month = String(d.getMonth() + 1).padStart(2, '0');
-                    const day = String(d.getDate()).padStart(2, '0');
-                    const weekdays = ['日', '一', '二', '三', '四', '五', '六'];
-                    const wd = weekdays[d.getDay()];
-                    return `${year}年${month}月${day}日 · 周${wd}`;
-                } catch (_) {
-                    return dateStr;
-                }
+                    const parsed = JSON.parse(sourceUrls);
+                    if (Array.isArray(parsed)) {
+                        urls = parsed.filter(u => typeof u === 'string' && u.trim().length > 0);
+                    }
+                } catch (_) { /* ignore */ }
             }
+            if (urls.length === 0) return null;
 
-            // 安全截取内容（用于摘要）
-            function truncateContent(html, maxLen = 220) {
-                if (!html) return '';
-                // 移除 HTML 标签，只取纯文本
-                const div = document.createElement('div');
-                div.innerHTML = html;
-                let text = div.textContent || div.innerText || '';
-                text = text.replace(/\s+/g, ' ').trim();
-                if (text.length <= maxLen) return text;
-                return text.slice(0, maxLen) + '…';
+            const fragment = document.createDocumentFragment();
+            const label = document.createElement('span');
+            label.className = 'label';
+            label.textContent = '🔗 来源';
+            fragment.appendChild(label);
+
+            urls.forEach((url) => {
+                const a = document.createElement('a');
+                a.href = url;
+                a.target = '_blank';
+                a.rel = 'noopener noreferrer';
+                let display = url;
+                try {
+                    const u = new URL(url);
+                    display = u.hostname.replace(/^www\./, '');
+                    if (display.length > 30) display = display.slice(0, 28) + '…';
+                } catch (_) { /* keep original */ }
+                a.textContent = display;
+                a.title = url;
+                fragment.appendChild(a);
+            });
+            return fragment;
+        }
+
+        function createCard(item) {
+            const card = document.createElement('div');
+            card.className = 'card';
+
+            const dateEl = document.createElement('div');
+            dateEl.className = 'card-date';
+            dateEl.textContent = formatDate(item.date);
+            card.appendChild(dateEl);
+
+            const titleEl = document.createElement('div');
+            titleEl.className = 'card-title';
+            const titleText = item.title && item.title.trim() ? item.title.trim() : '📄 无标题';
+            titleEl.textContent = titleText;
+            card.appendChild(titleEl);
+
+            const contentRaw = item.html || item.content || '';
+            const contentText = truncateContent(contentRaw, 220);
+            const contentEl = document.createElement('div');
+            contentEl.className = 'card-content';
+            if (contentText) {
+                contentEl.textContent = contentText;
+            } else {
+                contentEl.textContent = '（暂无摘要）';
+                contentEl.style.color = '#a0aec0';
+                contentEl.style.fontStyle = 'italic';
             }
+            card.appendChild(contentEl);
 
-            // 渲染来源链接
-            function renderSources(sourceUrls) {
-                if (!sourceUrls) return null;
-                let urls = [];
-                if (Array.isArray(sourceUrls)) {
-                    urls = sourceUrls.filter(u => typeof u === 'string' && u.trim().length > 0);
-                } else if (typeof sourceUrls === 'string') {
-                    try {
-                        const parsed = JSON.parse(sourceUrls);
-                        if (Array.isArray(parsed)) {
-                            urls = parsed.filter(u => typeof u === 'string' && u.trim().length > 0);
-                        }
-                    } catch (_) { /* 忽略 */ }
-                }
-                if (urls.length === 0) return null;
-
-                const fragment = document.createDocumentFragment();
-                const label = document.createElement('span');
-                label.className = 'label';
-                label.textContent = '🔗 来源';
-                fragment.appendChild(label);
-
-                urls.forEach((url, idx) => {
-                    const a = document.createElement('a');
-                    a.href = url;
-                    a.target = '_blank';
-                    a.rel = 'noopener noreferrer';
-                    // 提取域名作为显示文本
-                    let display = url;
-                    try {
-                        const u = new URL(url);
-                        display = u.hostname.replace(/^www\./, '');
-                        if (display.length > 30) display = display.slice(0, 28) + '…';
-                    } catch (_) { /* 保留原样 */ }
-                    a.textContent = display;
-                    a.title = url;
-                    fragment.appendChild(a);
-                });
-
-                return fragment;
+            const sourcesWrap = document.createElement('div');
+            sourcesWrap.className = 'card-sources';
+            const sourcesFragment = renderSources(item.source_urls);
+            if (sourcesFragment) {
+                sourcesWrap.appendChild(sourcesFragment);
+            } else {
+                const noSrc = document.createElement('span');
+                noSrc.className = 'no-source';
+                noSrc.textContent = '📎 无来源链接';
+                sourcesWrap.appendChild(noSrc);
             }
+            card.appendChild(sourcesWrap);
+            return card;
+        }
 
-            // 渲染单条简报为卡片 DOM
-            function createCard(item) {
-                const card = document.createElement('div');
-                card.className = 'card';
+        // ----- 主加载函数 -----
+        async function loadBriefs() {
+            // 直接使用导入的配置
+            const supabase = window.supabase.createClient(SUPS_URL, SUPS_ANON_KEY);
 
-                // 日期
-                const dateEl = document.createElement('div');
-                dateEl.className = 'card-date';
-                dateEl.textContent = formatDate(item.date);
-                card.appendChild(dateEl);
+            try {
+                const now = new Date();
+                const sevenDaysAgo = new Date(now);
+                sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+                const dateFilter = sevenDaysAgo.toISOString().split('T')[0];
 
-                // 标题
-                const titleEl = document.createElement('div');
-                titleEl.className = 'card-title';
-                const titleText = item.title && item.title.trim() ? item.title.trim() : '📄 无标题';
-                titleEl.textContent = titleText;
-                card.appendChild(titleEl);
+                const { data, error } = await supabase
+                    .from('briefs')
+                    .select('*')
+                    .gte('date', dateFilter)
+                    .order('date', { ascending: false })
+                    .order('inserted_at', { ascending: false });
 
-                // 内容摘要（优先使用 html，其次 content）
-                const contentRaw = item.html || item.content || '';
-                const contentText = truncateContent(contentRaw, 220);
-                const contentEl = document.createElement('div');
-                contentEl.className = 'card-content';
-                if (contentText) {
-                    contentEl.textContent = contentText;
-                } else {
-                    contentEl.textContent = '（暂无摘要）';
-                    contentEl.style.color = '#a0aec0';
-                    contentEl.style.fontStyle = 'italic';
-                }
-                card.appendChild(contentEl);
-
-                // 来源链接
-                const sourcesWrap = document.createElement('div');
-                sourcesWrap.className = 'card-sources';
-                const sourcesFragment = renderSources(item.source_urls);
-                if (sourcesFragment) {
-                    sourcesWrap.appendChild(sourcesFragment);
-                } else {
-                    const noSrc = document.createElement('span');
-                    noSrc.className = 'no-source';
-                    noSrc.textContent = '📎 无来源链接';
-                    sourcesWrap.appendChild(noSrc);
-                }
-                card.appendChild(sourcesWrap);
-
-                return card;
-            }
-
-            // ----------------------------------------------------------------
-            // 4. 主逻辑：获取数据并渲染
-            // ----------------------------------------------------------------
-            async function loadBriefs() {
-                // 检查环境变量
-                if (isPlaceholder(SUPABASE_URL) || isPlaceholder(SUPABASE_ANON_KEY)) {
-                    showError(
-                        '环境变量未配置',
-                        '请确保在 GitHub Actions 中设置了 SUPS_URL02 和 SUPS_API021 秘密变量，' +
-                        '或本地调试时在代码中填写真实值。'
-                    );
+                if (error) {
+                    console.error('Supabase query error:', error);
+                    showError('数据查询失败', error.message || '请检查网络或数据库配置');
                     return;
                 }
 
-                // 初始化 Supabase 客户端
-                const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
-                try {
-                    // 计算 7 天前的日期 (YYYY-MM-DD)
-                    const now = new Date();
-                    const sevenDaysAgo = new Date(now);
-                    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-                    const dateFilter = sevenDaysAgo.toISOString().split('T')[0];
-
-                    // 查询数据
-                    const { data, error } = await supabase
-                        .from('briefs')
-                        .select('*')
-                        .gte('date', dateFilter)
-                        .order('date', { ascending: false })
-                        .order('inserted_at', { ascending: false });
-
-                    if (error) {
-                        console.error('Supabase 查询错误:', error);
-                        showError('数据查询失败', error.message || '请检查网络或数据库配置');
-                        return;
-                    }
-
-                    // 隐藏加载状态
-                    loadingEl.classList.add('hidden');
-
-                    // 处理空数据
-                    if (!data || data.length === 0) {
-                        emptyEl.classList.remove('hidden');
-                        return;
-                    }
-
-                    // 渲染卡片
-                    gridEl.innerHTML = '';
-                    data.forEach(item => {
-                        const card = createCard(item);
-                        gridEl.appendChild(card);
-                    });
-                    gridEl.classList.remove('hidden');
-
-                } catch (err) {
-                    console.error('加载异常:', err);
-                    showError('加载异常', err.message || '请稍后重试');
-                }
-            }
-
-            // ----------------------------------------------------------------
-            // 5. 错误展示
-            // ----------------------------------------------------------------
-            function showError(msg, detail) {
                 loadingEl.classList.add('hidden');
-                emptyEl.classList.add('hidden');
-                gridEl.classList.add('hidden');
-                errorBox.classList.remove('hidden');
-                errorMsg.textContent = msg || '加载失败';
-                errorDetail.textContent = detail || '';
+
+                if (!data || data.length === 0) {
+                    emptyEl.classList.remove('hidden');
+                    return;
+                }
+
+                gridEl.innerHTML = '';
+                data.forEach(item => {
+                    const card = createCard(item);
+                    gridEl.appendChild(card);
+                });
+                gridEl.classList.remove('hidden');
+
+            } catch (err) {
+                console.error('加载异常:', err);
+                showError('加载异常', err.message || '请稍后重试');
             }
+        }
 
-            // ----------------------------------------------------------------
-            // 6. 启动
-            // ----------------------------------------------------------------
-            // 如果环境变量是占位符且未替换，直接报错（本地调试可手动修改）
-            if (isPlaceholder(SUPABASE_URL) || isPlaceholder(SUPABASE_ANON_KEY)) {
-                // 但不要阻塞，给出明确提示
-                console.warn('⚠️ 环境变量占位符未被替换，请在 GitHub Actions 中配置 secrets。');
-                // 如果是本地直接打开，会显示错误提示
-            }
+        function showError(msg, detail) {
+            loadingEl.classList.add('hidden');
+            emptyEl.classList.add('hidden');
+            gridEl.classList.add('hidden');
+            errorBox.classList.remove('hidden');
+            errorMsg.textContent = msg || '加载失败';
+            errorDetail.textContent = detail || '';
+        }
 
-            loadBriefs();
-
-        })();
+        // ----- 启动 -----
+        loadBriefs();
     </script>
 
 </body>
