@@ -16,14 +16,14 @@ QUERIES = {
     "china": "China OR 中国",
     "market": "A股 OR 大A OR 上证 OR 深证"
 }
-MAX_HEADLINES_PER_SECTION = 6
+MAX_HEADLINES_PER_SECTION = 10
 MAX_TOTAL_CHARS = 1000
 
 def random_uid(n=8):
     choices = string.ascii_letters + string.digits
     return ''.join(random.choice(choices) for _ in range(n))
 
-def fetch_google_news(query, language='zh-CN', max_items=6):
+def fetch_google_news(query, language='zh-CN', max_items=10):
     q = requests.utils.requote_uri(query)
     rss_url = f"https://news.google.com/rss/search?q={q}&hl={language}&gl=US&ceid=US:{language}"
     d = feedparser.parse(rss_url)
