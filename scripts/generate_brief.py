@@ -44,6 +44,14 @@ def build_section(entries, heading):
     return "\n".join(lines)
 
 def generate_brief():
+    # ---------- 修改开始 ----------
+    # 明确使用北京时间 (UTC+8)
+    beijing_tz = tz.gettz('Asia/Shanghai')
+    now_beijing = datetime.datetime.now(beijing_tz)
+    # 生成带时间的日期字符串
+    datetime_str = now_beijing.strftime('%Y-%m-%d %H:%M:%S')
+    # ---------- 修改结束 ----------
+
     sections = {}
     sources = []
     for k, q in QUERIES.items():
@@ -81,8 +89,10 @@ def generate_brief():
 
     payload = {
         'uid': uid,
-        'date': datetime.datetime.now(tz.tzlocal()).date().isoformat(),
-        'title': f"每日要闻 {datetime.datetime.now(tz.tzlocal()).date().isoformat()}",
+        # ---------- 修改开始 ----------
+        'date': datetime_str,   # 现在包含具体时间
+        'title': f"每日要闻 {datetime_str}",  # 标题也加上时间
+        # ---------- 修改结束 ----------
         'content': full_text,
         'html': html_block,
         'source_urls': list(dict.fromkeys(sources)),
