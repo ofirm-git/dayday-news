@@ -2,8 +2,14 @@ name: Daily Brief (generate and publish)
 
 on:
   schedule:
-    - cron: '55 0 * * *'   # 每日 00:55 UTC = 北京时间 08:55
-  workflow_dispatch:
+    # 以下时间均为 UTC，对应北京时间（UTC+8）
+    - cron: '0 16 * * *'   # 北京时间 00:00
+    - cron: '0 21 * * *'   # 北京时间 05:00
+    - cron: '40 0 * * *'   # 北京时间 08:40
+    - cron: '0 4 * * *'    # 北京时间 12:00
+    - cron: '0 7 * * *'    # 北京时间 15:00
+    - cron: '0 11 * * *'   # 北京时间 19:00
+  workflow_dispatch:       # 保留手动触发，方便测试
 
 permissions:
   # 仅需要默认权限来运行脚本并访问 secrets
