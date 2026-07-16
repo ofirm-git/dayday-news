@@ -9,6 +9,7 @@ import datetime
 import requests
 import feedparser
 from dateutil import tz
+from deep_translator import GoogleTranslator   # 新增：用于翻译
 
 # 查询设置（可按需调整）
 QUERIES = {
@@ -16,20 +17,30 @@ QUERIES = {
     "china": "China OR 中国",
     "market": "A股 OR 大A OR 上证 OR 深证"
 }
-MAX_HEADLINES_PER_SECTION = 6
+MAX_HEADLINES_PER_SECTION = 10   # 从 6 改为 10
 MAX_TOTAL_CHARS = 1000
+
+# 全局翻译器（只初始化一次，提升效率）
+_translator = GoogleTranslator(source='auto', target='zh-CN')
 
 def random_uid(n=8):
     choices = string.ascii_letters + string.digits
     return ''.join(random.choice(choices) for _ in range(n))
 
-def fetch_google_news(query, language='zh-CN', max_items=6):
+def fetch_google_news(query, language='zh-CN', max_items=10):   # 默认值也改为 10
     q = requests.utils.requote_uri(query)
     rss_url = f"https://news.google.com/rss/search?q={q}&hl={language}&gl=US&ceid=US:{language}"
     d = feedparser.parse(rss_url)
     items = []
     for e in d.entries[:max_items]:
         title = e.get('title', '')
+        # 翻译标题为简体中文
+        if title:
+            try:
+                title = _translator.translate(title)
+            except Exception as e:
+                # 翻译失败则保留原标题（可能已是中文或其它语言）
+                print(f"翻译失败: {e}, 保留原标题")
         link = e.get('link', '')
         summary = e.get('summary', '')
         items.append({'title': title, 'link': link, 'summary': summary})
@@ -44,13 +55,10 @@ def build_section(entries, heading):
     return "\n".join(lines)
 
 def generate_brief():
-    # ---------- 修改开始 ----------
     # 明确使用北京时间 (UTC+8)
     beijing_tz = tz.gettz('Asia/Shanghai')
     now_beijing = datetime.datetime.now(beijing_tz)
-    # 生成带时间的日期字符串
     datetime_str = now_beijing.strftime('%Y-%m-%d %H:%M:%S')
-    # ---------- 修改结束 ----------
 
     sections = {}
     sources = []
@@ -89,10 +97,8 @@ def generate_brief():
 
     payload = {
         'uid': uid,
-        # ---------- 修改开始 ----------
-        'date': datetime_str,   # 现在包含具体时间
-        'title': f"每日要闻 {datetime_str}",  # 标题也加上时间
-        # ---------- 修改结束 ----------
+        'date': datetime_str,
+        'title': f"每日要闻 {datetime_str}",
         'content': full_text,
         'html': html_block,
         'source_urls': list(dict.fromkeys(sources)),
